@@ -7,7 +7,7 @@
 <meta name="description" content="A finger-clip pulse sensor built from scratch: analog front end, KiCad PCB, FreeCAD enclosure and Teensy 4.0 firmware.">
 <meta property="og:title" content="PPG Vitals Monitor">
 <meta property="og:description" content="A finger-clip pulse sensor built from scratch: analog front end, KiCad PCB, FreeCAD enclosure and Teensy 4.0 firmware.">
-<meta property="og:image" content="assets/pcb-3d.webp">
+<meta property="og:image" content="assets/enclosure-board.webp">
 <meta property="og:type" content="website">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M2 18h7l3-9 5 16 4-11 2 4h7' fill='none' stroke='%23c42a3c' stroke-width='3' stroke-linejoin='round' stroke-linecap='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -163,6 +163,14 @@ section { padding-block: 72px 0; display: grid; gap: 22px; scroll-margin-top: 16
 .sheet { background: #fff; border: 1px solid var(--rule); border-radius: 6px; overflow-x: auto; }
 .sheet img { display: block; min-width: 900px; width: 100%; max-width: none; }
 
+/* build photos */
+.photos { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 16px; margin: 0; }
+.photos figure { margin: 0; display: grid; gap: 8px; align-content: start; }
+.photos img { display: block; width: 100%; height: auto; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 6px; border: 1px solid var(--rule); background: var(--panel); }
+.photos figcaption { font-size: .86rem; color: var(--ink-2); }
+.hero-photos { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); }
+@media (max-width: 720px) { .hero-photos { grid-template-columns: minmax(0, 1fr); } }
+
 /* cad */
 .viewer { position: relative; background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; overflow: hidden; }
 .viewer canvas { display: block; width: 100%; height: 440px; touch-action: none; cursor: grab; }
@@ -245,6 +253,11 @@ footer { margin-top: 80px; padding-top: 20px; border-top: 1px solid var(--rule);
       <div><span class="label">Front end</span><span class="v">MCP6002 ×2</span></div>
       <div><span class="label">Board</span><span class="v">86 × 43 mm, 2-layer</span></div>
       <div><span class="label">Printed parts</span><span class="v">4, FreeCAD</span></div>
+    </div>
+
+    <div class="photos hero-photos">
+      <figure><img src="assets/enclosure-board.webp" alt="Assembled green PCB with the Teensy 4.0 and two op-amps seated inside the black 3D-printed housing" width="1200" height="900"><figcaption>The fabricated board, hand-assembled and seated in the printed housing.</figcaption></figure>
+      <figure><img src="assets/enclosure-closed.webp" alt="Closed carbon-textured housing held in hand, with the photodiode visible through a window in the finger channel" width="1200" height="860"><figcaption>The closed housing. The photodiode looks into the finger channel through a window in the floor.</figcaption></figure>
     </div>
   </div>
 
@@ -345,23 +358,25 @@ footer { margin-top: 80px; padding-top: 20px; border-top: 1px solid var(--rule);
       <h2>A mixed-signal board with a quiet input</h2>
     </div>
     <div class="tabs" role="tablist" aria-label="Board views">
-      <button role="tab" id="tab-3d" aria-selected="true" data-src="assets/pcb-3d.webp" data-alt="3D render of the assembled PCB with the Teensy 4.0 and two socketed op-amps">3D</button>
-      <button role="tab" id="tab-top" aria-selected="false" data-src="assets/pcb-top.webp" data-alt="Top view of the PCB showing component placement and reference designators">Top</button>
-      <button role="tab" id="tab-bottom" aria-selected="false" data-src="assets/pcb-bottom.webp" data-alt="Bottom view of the PCB">Bottom</button>
+      <button role="tab" id="tab-built" aria-selected="true" data-src="assets/build-front.webp" data-alt="Photo of the fabricated and hand-soldered PCB with the Teensy 4.0, two op-amps and through-hole passives">Built</button>
+      <button role="tab" id="tab-back" aria-selected="false" data-src="assets/build-back.webp" data-alt="Photo of the back of the PCB showing the photodiode D1 and solder joints">Back</button>
+      <button role="tab" id="tab-layout" aria-selected="false" data-src="assets/pcb-schematic.png" data-alt="KiCad layout view showing front copper in red, back copper in blue and the ground pour">Layout</button>
+      <button role="tab" id="tab-3d" aria-selected="false" data-src="assets/pcb-3d.webp" data-alt="3D render of the PCB from KiCad">Render</button>
     </div>
     <div class="two" style="grid-template-columns:minmax(0,1.5fr) minmax(0,1fr)">
-      <div class="board" role="tabpanel"><img id="boardimg" src="assets/pcb-3d.webp" alt="3D render of the assembled PCB with the Teensy 4.0 and two socketed op-amps" width="1200" height="735"></div>
+      <div class="board" role="tabpanel"><img id="boardimg" src="assets/build-front.webp" alt="Photo of the fabricated and hand-soldered PCB with the Teensy 4.0, two op-amps and through-hole passives" width="1200" height="860"></div>
       <ul class="notes">
         <li><b>Signal flows left to right</b><span>Rail splitter and Teensy on the left, then TIA → low-pass → high-pass → gain across the right half, matching the schematic order.</span></li>
         <li><b>Short TIA input node</b><span>The photodiode current enters a high-impedance node that behaves like an antenna, so the photodiode header sits right beside U1 and its feedback pair R1/C3.</span></li>
         <li><b>Ground pour, few vias</b><span>A ground zone backs the analog section. 55 track segments and only 2 vias on two layers.</span></li>
-        <li><b>Built to hand-solder and rework</b><span>Through-hole passives, DIP-8 sockets for both op-amps, Teensy on headers. Gerbers and drill files are exported and ready for fab.</span></li>
+        <li><b>Photodiode on the back side</b><span>D1 is mounted on the underside of the board, so it faces down into the finger channel when the board sits in the housing.</span></li>
+        <li><b>Fabricated and hand-soldered</b><span>Boards made from the exported Gerbers, then assembled by hand: through-hole passives, DIP-8 op-amps and the Teensy on headers.</span></li>
         <li><span class="drc">DRC: 0 unconnected · 0 errors</span><span>4 cosmetic warnings (silkscreen text height inside the Teensy footprint, local footprint overrides).</span></li>
       </ul>
     </div>
     <div>
       <p class="file">ppg_circuit.kicad_sch: scroll sideways on small screens</p>
-      <div class="sheet"><img src="assets/schematic.webp" alt="Full KiCad schematic: LED drive, photodiode and TIA, low-pass, high-pass, inverting amplifier, rail splitter and Teensy 4.0" width="1800" height="1159" loading="lazy"></div>
+      <div class="sheet"><img src="assets/schematic.png" alt="Full KiCad schematic: LED drive, photodiode and TIA, low-pass, high-pass, inverting amplifier, rail splitter and Teensy 4.0" width="1168" height="804" loading="lazy"></div>
     </div>
   </section>
 
@@ -370,7 +385,7 @@ footer { margin-top: 80px; padding-top: 20px; border-top: 1px solid var(--rule);
       <span class="label">Enclosure · FreeCAD</span>
       <h2>Four printed parts that hold the optics still</h2>
     </div>
-    <p class="prose">In a transmission-mode sensor, LED and photodiode alignment and ambient-light leakage matter as much as the circuit does. The housing is modular: the main body holds the finger channel and the PCB, separate holders seat the LED and photodiode across the finger, and a screw-fastened cover closes the bottom.</p>
+    <p class="prose">In a transmission-mode sensor, LED and photodiode alignment and ambient-light leakage matter as much as the circuit does. The housing is modular: the main body holds the finger channel and the PCB, separate holders seat the LED and photodiode across the finger, and a screw-fastened cover closes the bottom. The parts are printed in dark, opaque filament to keep room light away from the photodiode.</p>
     <div class="viewer">
       <canvas id="cad" aria-label="Interactive 3D model of the enclosure parts"></canvas>
       <span class="hint">Drag to orbit · scroll or pinch to zoom</span>
@@ -385,6 +400,11 @@ footer { margin-top: 80px; padding-top: 20px; border-top: 1px solid var(--rule);
       <div><b><i class="sw" style="background:var(--ir)"></i>Enclosure cover</b><span>Base plate with standoffs and corner screw holes.</span></div>
       <div><b><i class="sw" style="background:var(--pulse)"></i>LED holder</b><span>Seats the 5 mm emitter over the fingertip.</span></div>
       <div><b><i class="sw" style="background:var(--mask)"></i>Photodiode cover</b><span>Caps the BPW34 opposite the LED.</span></div>
+    </div>
+    <div class="photos">
+      <figure><img src="assets/enclosure-empty.webp" alt="Empty black printed housing showing the PCB bay and the raised optics block with component holes" width="1200" height="870" loading="lazy"><figcaption>Printed main body. The raised block holds the optics across the finger channel.</figcaption></figure>
+      <figure><img src="assets/enclosure-board.webp" alt="PCB seated inside the printed housing" width="1200" height="900" loading="lazy"><figcaption>The board drops into its bay, matching the L-shaped outline.</figcaption></figure>
+      <figure><img src="assets/enclosure-closed.webp" alt="Closed housing with the photodiode visible through the finger channel" width="1200" height="860" loading="lazy"><figcaption>Closed up, with the photodiode showing through the channel window.</figcaption></figure>
     </div>
   </section>
 
@@ -431,7 +451,7 @@ bpm  = peak * 60</pre>
     </div>
     <ol class="phases">
       <li><span class="num">Phase 1</span><div><h3>Breadboard front end</h3><p>IR LED, photodiode, TIA and filters on a breadboard. Firmware streaming samples and a live waveform and FFT plotter.</p></div><span class="chip done">Done</span></li>
-      <li><span class="num">Phase 2</span><div><h3>Sensor PCB and enclosure</h3><p>Schematic simulated, board laid out with a clean DRC, Gerbers exported. Modular printed housing with screw fastening.</p></div><span class="chip now">In progress</span></li>
+      <li><span class="num">Phase 2</span><div><h3>Sensor PCB and enclosure</h3><p>Schematic simulated, board laid out with a clean DRC, fabricated and hand-assembled. Modular housing printed, with screw fastening.</p></div><span class="chip done">Built</span></li>
       <li><span class="num">Phase 3</span><div><h3>Dual-wavelength SpO<sub>2</sub></h3><p>Multiplex the red and 940 nm LEDs from the MCU and compute oxygen saturation from the red/IR ratio.</p></div><span class="chip next">Next</span></li>
       <li><span class="num">Phase 4</span><div><h3>Pulse-shape bio-ID</h3><p>Enroll 2–5 people by pulse width, rise time and dicrotic-notch timing, then match the wearer with a distance-based classifier on the MCU.</p></div><span class="chip next">Planned</span></li>
       <li><span class="num">Phase 5</span><div><h3>Integrated board and display</h3><p>Fold the MCU and an SSD1306 OLED onto one board and finish the housing around it.</p></div><span class="chip next">Planned</span></li>
