@@ -1,0 +1,416 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Hazard Detector</title>
+<meta name="description" content="Real-time hazard detection for e-scooters with YOLOv8 and MobileSAM. A four-person IEEE Quarterly Project; I built the road-path segmentation.">
+<meta property="og:title" content="Hazard Detector">
+<meta property="og:description" content="Real-time hazard detection for e-scooters with YOLOv8 and MobileSAM.">
+<meta property="og:image" content="assets/poster.jpg">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 3 30 28H2Z' fill='none' stroke='%23c76a12' stroke-width='3' stroke-linejoin='round'/%3E%3Cpath d='M16 12v7M16 23v1' stroke='%23c76a12' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@112,500;125,800&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: same bench-notebook system as the other project pages. Accent here is safety amber
+   (the hazard colour); the road-path green comes from the segmentation overlay itself. */
+:root {
+  --paper: #f2f4f6;
+  --panel: #ffffff;
+  --ink: #15202b;
+  --ink-2: #4a5866;
+  --rule: #d5dbe1;
+  --grid: #e3e8ed;
+  --amber: #b85f0c;      /* accent */
+  --amber-soft: rgba(184, 95, 12, .10);
+  --path: #2f8a55;       /* SAM road polygon */
+  --stop: #c42a3c;       /* a box that fires an alert */
+  --font-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --font-body: "IBM Plex Sans", "Segoe UI", Roboto, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --measure: 66ch;
+  --wide: 1120px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #0f151b; --panel: #161e26; --ink: #e6ebf0; --ink-2: #9aa8b5; --rule: #2a3540; --grid: #1f2a34;
+    --amber: #f0a050; --amber-soft: rgba(240, 160, 80, .12); --path: #6fd39a; --stop: #ff5a6a; color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--paper); color: var(--ink); font: 400 1.0625rem/1.65 var(--font-body); padding-inline: 20px; padding-block: 0 64px; }
+img, video { max-width: 100%; }
+[hidden] { display: none !important; }
+.wrap { max-width: var(--wide); margin-inline: auto; }
+.prose { max-width: var(--measure); }
+.prose p + p { margin-top: 1em; }
+h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; margin: 0; line-height: 1.08; }
+h1 { font-stretch: 125%; font-weight: 800; font-size: clamp(2.4rem, 7vw, 4.6rem); letter-spacing: -.02em; }
+h2 { font-stretch: 125%; font-weight: 800; font-size: clamp(1.6rem, 3.6vw, 2.3rem); letter-spacing: -.01em; }
+h3 { font-stretch: 112%; font-weight: 500; font-size: 1.15rem; }
+p { margin: 0; }
+a { color: var(--amber); text-underline-offset: 3px; }
+a:focus-visible, button:focus-visible, canvas:focus-visible { outline: 2px solid var(--amber); outline-offset: 3px; }
+code, .mono { font-family: var(--font-mono); font-size: .88em; }
+.label { font: 500 .74rem/1 var(--font-mono); text-transform: uppercase; letter-spacing: .12em; color: var(--ink-2); }
+
+.top { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding-block: 22px; border-bottom: 1px solid var(--rule); flex-wrap: wrap; }
+.top nav { display: flex; gap: 18px; flex-wrap: wrap; }
+.top a { color: var(--ink-2); text-decoration: none; font: 500 .82rem var(--font-mono); }
+.top a:hover { color: var(--amber); }
+
+.hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 380px); gap: 40px; padding-block: 56px 32px; align-items: center; }
+.hero .lede { font-size: 1.22rem; color: var(--ink-2); max-width: 52ch; }
+.hero .lede strong { color: var(--ink); font-weight: 500; }
+.hero-text { display: grid; gap: 20px; }
+.links { display: flex; gap: 10px; flex-wrap: wrap; }
+.btn { font: 500 .82rem var(--font-mono); padding: 9px 14px; border-radius: 4px; border: 1px solid var(--rule); color: var(--ink); text-decoration: none; background: var(--panel); }
+.btn:hover { border-color: var(--amber); color: var(--amber); }
+.phone { margin: 0; display: grid; gap: 10px; }
+.phone video { display: block; width: 100%; aspect-ratio: 9 / 16; object-fit: cover; border-radius: 14px; border: 1px solid var(--rule); background: #000; }
+.caption { font-size: .86rem; color: var(--ink-2); }
+@media (max-width: 820px) {
+  .hero { grid-template-columns: minmax(0, 1fr); }
+  .phone { max-width: 360px; }
+}
+
+.specs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); }
+.specs div { padding: 16px 16px 16px 0; display: grid; gap: 6px; align-content: start; }
+.specs div + div { padding-left: 16px; border-left: 1px solid var(--rule); }
+.specs .v { font: 500 1rem var(--font-mono); }
+@media (max-width: 720px) {
+  .specs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .specs div:nth-child(3) { padding-left: 0; border-left: 0; }
+  .specs div:nth-child(n+3) { border-top: 1px solid var(--rule); }
+}
+
+section { padding-block: 72px 0; display: grid; gap: 22px; scroll-margin-top: 16px; }
+.sec-head { display: grid; gap: 10px; }
+.sec-head .label { color: var(--amber); }
+.two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 32px; align-items: start; }
+@media (max-width: 860px) { .two { grid-template-columns: minmax(0, 1fr); } }
+
+/* rule tester */
+.tester { display: grid; grid-template-columns: minmax(0, 340px) minmax(0, 1fr); gap: 28px; align-items: start; background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; padding: 20px; }
+.stage-wrap { position: relative; }
+#rule { display: block; width: 100%; height: auto; aspect-ratio: 9 / 16; border-radius: 8px; touch-action: none; cursor: grab; background: #000; }
+.checks { display: grid; gap: 0; }
+.check { display: grid; grid-template-columns: 1.6rem minmax(0, 1fr) auto; gap: 12px; padding-block: 14px; border-bottom: 1px solid var(--rule); align-items: baseline; }
+.check .mark { font: 500 .95rem var(--font-mono); }
+.check .mark.ok { color: var(--stop); }
+.check .mark.no { color: var(--ink-2); }
+.check b { font-weight: 600; display: block; }
+.check span.d { color: var(--ink-2); font-size: .92rem; }
+.check .val { font: 500 .85rem var(--font-mono); font-variant-numeric: tabular-nums; color: var(--ink-2); white-space: nowrap; }
+.verdict { display: flex; gap: 12px; align-items: center; padding-top: 16px; flex-wrap: wrap; }
+.chip { font: 500 .78rem var(--font-mono); text-transform: uppercase; letter-spacing: .08em; padding: 5px 11px; border-radius: 999px; border: 1px solid currentColor; }
+.chip.alert { color: var(--stop); background: color-mix(in srgb, var(--stop) 10%, transparent); }
+.chip.quiet { color: var(--ink-2); }
+.seg { display: inline-flex; border: 1px solid var(--rule); border-radius: 4px; overflow: hidden; }
+.seg button { font: 500 .78rem var(--font-mono); padding: 7px 12px; border: 0; background: transparent; color: var(--ink-2); cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--rule); }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.hint { font: 500 .78rem var(--font-mono); color: var(--ink-2); }
+@media (max-width: 760px) { .tester { grid-template-columns: minmax(0, 1fr); } #rule { max-width: 340px; } }
+
+/* pipeline */
+.flow { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); border: 1px solid var(--rule); border-radius: 6px; background: var(--panel); overflow: hidden; }
+.flow > div { padding: 18px 16px 20px; display: grid; gap: 8px; align-content: start; position: relative; }
+.flow > div + div { border-left: 1px solid var(--rule); }
+.flow > div + div::before { content: ""; position: absolute; left: -6px; top: 26px; width: 10px; height: 10px; border-top: 1px solid var(--ink-2); border-right: 1px solid var(--ink-2); transform: rotate(45deg); background: var(--panel); }
+.flow .n { font: 500 .72rem var(--font-mono); color: var(--amber); }
+.flow h3 { font-size: 1rem; }
+.flow p { font-size: .88rem; color: var(--ink-2); }
+.flow .rate { font: 500 .8rem var(--font-mono); border-top: 1px dashed var(--rule); padding-top: 8px; }
+.flow .mine { background: color-mix(in srgb, var(--path) 9%, var(--panel)); }
+.flow .mine .n { color: var(--path); }
+@media (max-width: 900px) {
+  .flow { grid-template-columns: minmax(0, 1fr); }
+  .flow > div + div { border-left: 0; border-top: 1px solid var(--rule); }
+  .flow > div + div::before { display: none; }
+}
+
+pre { margin: 0; background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; padding: 16px 18px; font: 400 .82rem/1.6 var(--font-mono); overflow-x: auto; color: var(--ink); }
+pre .c { color: var(--ink-2); font-style: italic; }
+pre .k { color: var(--amber); }
+pre .h { background: color-mix(in srgb, var(--path) 14%, transparent); color: var(--path); }
+.file { font: 500 .76rem var(--font-mono); color: var(--ink-2); margin-bottom: 8px; }
+
+.timeline { list-style: none; margin: 0; padding: 0; display: grid; }
+.timeline li { display: grid; grid-template-columns: 6.5rem minmax(0, 1fr); gap: 16px; padding-block: 12px; border-top: 1px solid var(--rule); }
+.timeline li:last-child { border-bottom: 1px solid var(--rule); }
+.timeline time { font: 500 .82rem var(--font-mono); color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.timeline span { font-size: .95rem; }
+
+.team { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: 1px solid var(--rule); }
+.team div { padding: 18px 16px 0 0; display: grid; gap: 6px; align-content: start; }
+.team div + div { padding-left: 16px; border-left: 1px solid var(--rule); }
+.team .role { font: 500 .74rem var(--font-mono); text-transform: uppercase; letter-spacing: .08em; color: var(--ink-2); }
+.team .me .role { color: var(--path); }
+.team p { color: var(--ink-2); font-size: .93rem; }
+@media (max-width: 860px) {
+  .team { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 18px; }
+  .team div:nth-child(3) { padding-left: 0; border-left: 0; }
+}
+@media (max-width: 480px) {
+  .team { grid-template-columns: minmax(0, 1fr); }
+  .team div + div { padding-left: 0; border-left: 0; border-top: 1px solid var(--rule); }
+}
+
+.stack { display: flex; flex-wrap: wrap; gap: 8px; }
+.stack span { font: 400 .82rem var(--font-mono); padding: 6px 10px; border: 1px solid var(--rule); border-radius: 4px; background: var(--panel); }
+footer { margin-top: 80px; padding-top: 20px; border-top: 1px solid var(--rule); color: var(--ink-2); font-size: .88rem; display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+footer a { color: var(--ink-2); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <a class="label" href="../">← All projects</a>
+    <nav aria-label="Sections">
+      <a href="#rule-sec">Alert rule</a>
+      <a href="#path">Path detection</a>
+      <a href="#pipeline">Pipeline</a>
+      <a href="#team">Team</a>
+    </nav>
+  </header>
+
+  <div class="hero">
+    <div class="hero-text">
+      <span class="label">IEEE Quarterly Project · Spring 2026 · team of 4</span>
+      <h1>Hazard Detector</h1>
+      <p class="lede">A camera on an e-scooter streams video into a computer-vision pipeline that <strong>spots potholes, rocks, curbs, stairs, speed bumps, people and vehicles, and beeps only when one is actually in the rider's path</strong>. I built the part that finds the path: a MobileSAM model that outlines the road surface ahead.</p>
+      <div class="links">
+        <a class="btn" href="https://github.com/kdbell4/hazard-detector">Source on GitHub</a>
+        <a class="btn" href="https://devpost.com/software/hazard-detection-system">Devpost demo</a>
+      </div>
+    </div>
+    <figure class="phone">
+      <video id="demo" autoplay muted loop playsinline preload="metadata" poster="assets/poster.jpg" aria-label="Night ride along a campus bike path with the detected road surface shaded green and detections boxed">
+        <source src="assets/demo.webm" type="video/webm">
+        <source src="assets/demo.mp4" type="video/mp4">
+      </video>
+      <figcaption class="caption">Our test ride, re-run through MobileSAM and the base YOLO model. Green is the road surface the path step finds. The people later in the clip are detected but stay quiet: they are too small and too far up the frame to be a threat.</figcaption>
+    </figure>
+  </div>
+
+  <div class="specs">
+    <div><span class="label">My role</span><span class="v">Path segmentation</span></div>
+    <div><span class="label">Detection</span><span class="v">YOLOv8n + 5 custom</span></div>
+    <div><span class="label">Segmentation</span><span class="v">MobileSAM</span></div>
+    <div><span class="label">App</span><span class="v">FastAPI dashboard</span></div>
+  </div>
+
+  <section id="rule-sec">
+    <div class="sec-head">
+      <span class="label">The alert rule</span>
+      <h2>Three checks before it beeps</h2>
+    </div>
+    <p class="prose">A detector that beeps at every car in frame is useless, because most of them are parked or far away. An object only counts as a hazard when it is <b>big enough to be close</b>, <b>sitting on the road ahead</b>, and <b>low in the frame</b>. Drag the box around this frame from our test ride, or resize it from the corner, to see the rule decide.</p>
+    <div class="tester">
+      <div class="stage-wrap">
+        <canvas id="rule" width="360" height="640" tabindex="0" aria-label="Video frame with the road outline and a draggable detection box. Use arrow keys to move the box, shift plus arrows to resize."></canvas>
+      </div>
+      <div style="display:grid;gap:14px;min-width:0">
+        <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+          <span class="hint">Object class</span>
+          <div class="seg" role="group" aria-label="Object class">
+            <button type="button" id="cls-person" data-cls="person" aria-pressed="true">person</button>
+            <button type="button" id="cls-vehicle" data-cls="vehicle" aria-pressed="false">vehicle</button>
+            <button type="button" id="cls-other" data-cls="other" aria-pressed="false">pothole, rock…</button>
+          </div>
+        </div>
+        <div class="checks">
+          <div class="check"><span class="mark" id="m-close"></span><div><b>Close enough</b><span class="d">Box covers more of the frame than the class threshold: 15% for people, 22% for vehicles, 8% for ground hazards.</span></div><span class="val" id="v-close"></span></div>
+          <div class="check"><span class="mark" id="m-path"></span><div><b>In the path</b><span class="d">The bottom-centre of the box, where the object meets the ground, lands inside the road outline.</span></div><span class="val" id="v-path"></span></div>
+          <div class="check"><span class="mark" id="m-low"></span><div><b>Low in frame</b><span class="d">The bottom edge is in the lower 40% of the frame, so the object is near the scooter, not down the road.</span></div><span class="val" id="v-low"></span></div>
+        </div>
+        <div class="verdict"><span class="chip quiet" id="verdict">No alert</span><span class="hint" id="verdict-note"></span></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="path">
+    <div class="sec-head">
+      <span class="label">My part · path detection</span>
+      <h2>Finding the road with three seed points</h2>
+    </div>
+    <div class="two">
+      <div class="prose">
+        <p>Before path detection, the "in path" check was a fixed strip down the middle of the frame. That breaks on curves and whenever the camera tilts, which happens constantly on a scooter.</p>
+        <p>Segment Anything models take prompts: give them a point and they return the mask of the object under it. The pixels just in front of the front wheel are almost always road, so I seed MobileSAM with three points along the bottom edge, at 2/5, 1/2 and 3/5 of the width. Of the masks it returns, I keep the largest one and turn it into a polygon. The rest of the app can then test any point against it with <code>cv2.pointPolygonTest</code>.</p>
+        <p>Segmentation is the slowest model in the pipeline, so it runs on every fifth inference frame and the polygon is reused in between. The road ahead barely changes in a sixth of a second.</p>
+      </div>
+      <div style="min-width:0">
+        <p class="file">webapp/engine.py · _update_path_polygon</p>
+<pre>points = [[2 * w // 5, h],      <span class="c"># left of the wheel</span>
+          [w // 2,     h],      <span class="c"># straight ahead</span>
+          [3 * w // 5, h]]      <span class="c"># right of the wheel</span>
+results = self._sam.predict(frame, conf=0.25,
+                            points=points, verbose=False)
+<span class="k">if</span> results[0].masks <span class="k">and</span> results[0].masks.xy:
+    <span class="h">self._path_polygon = max(results[0].masks.xy,
+                             key=cv2.contourArea)</span></pre>
+      </div>
+    </div>
+    <div class="two">
+      <div class="prose">
+        <h3 style="margin-bottom:10px">How it developed</h3>
+        <p>I prototyped on a still image first, then on recorded ride video, then reduced the output to the single polygon the hazard logic needs before merging it into the team repo.</p>
+      </div>
+      <ol class="timeline">
+        <li><time>Apr 28</time><span>Segmented a single road image with SAM</span></li>
+        <li><time>Apr 29</time><span>Ran it on ride video, prompted by one point</span></li>
+        <li><time>May 4</time><span>Switched to three seed points and kept only the largest mask as a polygon</span></li>
+        <li><time>May 13</time><span>Refactored and merged into the team repo</span></li>
+        <li><time>May 26</time><span>Added SAM 2.1 tiny weights to the main repo to try as a replacement</span></li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="pipeline">
+    <div class="sec-head">
+      <span class="label">Pipeline</span>
+      <h2>From camera frame to beep</h2>
+    </div>
+    <div class="flow">
+      <div><span class="n">Capture thread</span><h3>Camera</h3><p>Webcam or video file, one-frame buffer so inference always sees the newest frame.</p><span class="rate">full frame rate</span></div>
+      <div><span class="n">Ultralytics YOLO</span><h3>Detection</h3><p>YOLOv8n filtered to people, vehicles and animals, plus five custom-trained hazard models.</p><span class="rate">base every frame, custom every 3rd</span></div>
+      <div class="mine"><span class="n">MobileSAM · my part</span><h3>Road path</h3><p>Largest mask from three bottom-edge seed points, kept as a polygon.</p><span class="rate">every 5th frame</span></div>
+      <div><span class="n">Hazard logic</span><h3>Alert rule</h3><p>Close enough, in the path, and low in frame. Per-label cooldown so one pothole beeps once.</p><span class="rate">per detection</span></div>
+      <div><span class="n">FastAPI</span><h3>Alert + dashboard</h3><p>Audio alert, CSV log, and a browser dashboard with the live feed and model toggles.</p><span class="rate">MJPEG stream</span></div>
+    </div>
+    <p class="caption prose">Capture and inference run on separate threads, so the video stays smooth while the boxes update as fast as the hardware allows. The engine picks Apple MPS, CUDA or CPU automatically.</p>
+  </section>
+
+  <section id="team">
+    <div class="sec-head">
+      <span class="label">Team</span>
+      <h2>Who built what</h2>
+    </div>
+    <div class="team">
+      <div class="me"><span class="role">Me · path detection</span><h3>Kenny</h3><p>MobileSAM road segmentation, so alerts only fire for objects in the scooter's path. Also set up the repo and the first YOLO + OpenCV demo.</p></div>
+      <div><span class="role">Hazard logic + integration</span><h3>Toby</h3><p>The rule that decides when an object is a threat, and the web app that combines everyone's work.</p></div>
+      <div><span class="role">Custom models</span><h3>Ashwin</h3><p>Trained the pothole, rock, stair, curb and speed-bump models from Roboflow datasets and collected data.</p></div>
+      <div><span class="role">Alerts</span><h3>Katherine</h3><p>Audio playback, the cooldown that stops constant beeping, and timestamped CSV logging.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <span class="label">Tools</span>
+      <h2>Stack</h2>
+    </div>
+    <div class="stack"><span>Python</span><span>Ultralytics YOLOv8</span><span>MobileSAM</span><span>OpenCV</span><span>PyTorch (MPS / CUDA)</span><span>FastAPI</span><span>pygame</span><span>Roboflow</span></div>
+  </section>
+
+  <footer>
+    <span>Hazard Detector</span>
+    <a class="mono" href="https://github.com/kdbell4/hazard-detector">kdbell4/hazard-detector</a>
+  </footer>
+</div>
+
+<script>
+/* Rule tester: the same three checks as webapp/engine.py, on a real frame and SAM polygon. */
+(async () => {
+  const cv = document.getElementById("rule"), ctx = cv.getContext("2d");
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const PROX = { person: 0.15, vehicle: 0.22, other: 0.08 };
+  let data, img = new Image();
+  try {
+    data = await (await fetch("assets/sample.json")).json();
+    img.src = "assets/sample.jpg";
+    await img.decode();
+  } catch (e) {
+    ctx.fillStyle = "#888"; ctx.font = "14px sans-serif"; ctx.fillText("Sample frame could not load.", 20, 40); return;
+  }
+  const W = cv.width = data.w, H = cv.height = data.h;
+  const poly = data.polygon.map(([x, y]) => [x * W, y * H]);
+  const person = data.boxes.find(b => b.label === "person");
+  let cls = "person";
+  let box = person ? { x: person.xyxy[0] * W, y: person.xyxy[1] * H, w: (person.xyxy[2] - person.xyxy[0]) * W, h: (person.xyxy[3] - person.xyxy[1]) * H }
+                   : { x: W * 0.32, y: H * 0.55, w: W * 0.36, h: H * 0.3 };
+
+  const inside = (px, py) => { let c = false; for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) { const [xi, yi] = poly[i], [xj, yj] = poly[j]; if ((yi > py) !== (yj > py) && px < (xj - xi) * (py - yi) / (yj - yi) + xi) c = !c; } return c; };
+  const evaluate = () => {
+    const area = (box.w * box.h) / (W * H), bx = box.x + box.w / 2, by = box.y + box.h;
+    return { area, close: area > PROX[cls], path: inside(bx, by), low: by > H * 0.6, bx, by };
+  };
+  const set = (id, ok, val) => {
+    const m = document.getElementById("m-" + id);
+    m.textContent = ok ? "✓" : "✗"; m.className = "mark " + (ok ? "ok" : "no");
+    document.getElementById("v-" + id).textContent = val;
+  };
+  function draw() {
+    const r = evaluate(), hazard = r.close && r.path && r.low;
+    ctx.drawImage(img, 0, 0, W, H);
+    // lower-40% band
+    ctx.fillStyle = "rgba(255,255,255,.06)"; ctx.fillRect(0, H * 0.6, W, H * 0.4);
+    ctx.setLineDash([6, 6]); ctx.strokeStyle = "rgba(255,255,255,.55)"; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(0, H * 0.6); ctx.lineTo(W, H * 0.6); ctx.stroke(); ctx.setLineDash([]);
+    ctx.font = "500 12px " + css("--font-mono"); ctx.fillStyle = "rgba(255,255,255,.8)"; ctx.fillText("60% line", 8, H * 0.6 - 6);
+    // road polygon
+    ctx.beginPath(); poly.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)); ctx.closePath();
+    ctx.fillStyle = "rgba(90,200,120,.26)"; ctx.fill(); ctx.strokeStyle = "rgb(110,235,140)"; ctx.lineWidth = 2; ctx.stroke();
+    // seed points
+    [0.4, 0.5, 0.6].forEach(f => { ctx.beginPath(); ctx.arc(W * f, H - 3, 5, 0, 7); ctx.fillStyle = "rgb(110,235,140)"; ctx.fill(); });
+    // box
+    const col = hazard ? "rgb(235,60,60)" : "rgb(90,200,235)";
+    ctx.strokeStyle = col; ctx.lineWidth = 3; ctx.strokeRect(box.x, box.y, box.w, box.h);
+    ctx.fillStyle = col; ctx.fillRect(box.x + box.w - 14, box.y + box.h - 14, 14, 14);
+    ctx.beginPath(); ctx.arc(r.bx, r.by, 6, 0, 7); ctx.fillStyle = "#fff"; ctx.fill(); ctx.lineWidth = 2; ctx.stroke();
+    const tag = (hazard ? "HAZARD " : "") + (cls === "other" ? "object" : cls);
+    ctx.font = "600 13px " + css("--font-mono"); const tw = ctx.measureText(tag).width;
+    ctx.fillStyle = col; ctx.fillRect(box.x, Math.max(0, box.y - 22), tw + 12, 22); ctx.fillStyle = "#fff"; ctx.fillText(tag, box.x + 6, Math.max(15, box.y - 6));
+
+    set("close", r.close, `${(r.area * 100).toFixed(1)}% / ${PROX[cls] * 100}%`);
+    set("path", r.path, r.path ? "on road" : "off road");
+    set("low", r.low, `${Math.round(r.by / H * 100)}% down`);
+    const v = document.getElementById("verdict");
+    v.textContent = hazard ? "Alert" : "No alert"; v.className = "chip " + (hazard ? "alert" : "quiet");
+    const missing = [!r.close && "too small", !r.path && "off the road", !r.low && "too far up"].filter(Boolean);
+    document.getElementById("verdict-note").textContent = hazard ? "All three checks pass." : "Ignored: " + missing.join(", ") + ".";
+  }
+
+  // pointer: drag body to move, drag the corner square to resize
+  const pt = e => { const r = cv.getBoundingClientRect(); return [(e.clientX - r.left) * W / r.width, (e.clientY - r.top) * H / r.height]; };
+  let drag = null;
+  cv.addEventListener("pointerdown", e => {
+    const [x, y] = pt(e);
+    const nearCorner = Math.abs(x - (box.x + box.w)) < 26 && Math.abs(y - (box.y + box.h)) < 26;
+    const inBox = x > box.x && x < box.x + box.w && y > box.y && y < box.y + box.h;
+    if (nearCorner) drag = { mode: "size", x, y, b: { ...box } };
+    else if (inBox) drag = { mode: "move", x, y, b: { ...box } };
+    else { box.x = x - box.w / 2; box.y = y - box.h; drag = { mode: "move", x, y, b: { ...box } }; }
+    cv.setPointerCapture(e.pointerId); cv.style.cursor = "grabbing"; clamp(); draw();
+  });
+  cv.addEventListener("pointermove", e => {
+    if (!drag) return; const [x, y] = pt(e), dx = x - drag.x, dy = y - drag.y;
+    if (drag.mode === "move") { box.x = drag.b.x + dx; box.y = drag.b.y + dy; }
+    else { box.w = Math.max(24, drag.b.w + dx); box.h = Math.max(24, drag.b.h + dy); }
+    clamp(); draw();
+  });
+  const end = () => { drag = null; cv.style.cursor = "grab"; };
+  cv.addEventListener("pointerup", end); cv.addEventListener("pointercancel", end);
+  cv.addEventListener("keydown", e => {
+    const k = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[e.key]; if (!k) return;
+    e.preventDefault(); const s = 10;
+    if (e.shiftKey) { box.w = Math.max(24, box.w + k[0] * s); box.h = Math.max(24, box.h + k[1] * s); } else { box.x += k[0] * s; box.y += k[1] * s; }
+    clamp(); draw();
+  });
+  function clamp() { box.w = Math.min(box.w, W); box.h = Math.min(box.h, H); box.x = Math.min(Math.max(0, box.x), W - box.w); box.y = Math.min(Math.max(0, box.y), H - box.h); }
+
+  document.querySelectorAll(".seg button").forEach(b => b.addEventListener("click", () => {
+    cls = b.dataset.cls; document.querySelectorAll(".seg button").forEach(o => o.setAttribute("aria-pressed", o === b)); draw();
+  }));
+  draw();
+})();
+
+const v = document.getElementById("demo");
+if (matchMedia("(prefers-reduced-motion: reduce)").matches) { v.removeAttribute("autoplay"); v.pause(); v.controls = true; }
+</script>
+</body>
+</html>
