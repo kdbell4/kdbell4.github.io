@@ -1,0 +1,16 @@
+---
+// Adapted from as-folio's Navbar.astro (MIT; see licenses/as-folio-MIT.txt).
+import ThemeToggle from './ThemeToggle.astro';
+const path = Astro.url.pathname;
+const items = [{ label: 'About', href: '/' }, { label: 'Projects', href: '/projects/' }];
+const active = (href: string) => href === '/' ? path === '/' : path.startsWith('/projects/') || path.startsWith('/ppg-vitals-monitor/') || path.startsWith('/hazard-detector/');
+---
+<nav class="site-navbar" aria-label="Main navigation">
+  <div class="page-container navbar-inner">
+    <a class="brand" href="/">Kenny Bell</a>
+    <div class="nav-links">
+      {items.map((item) => <a href={item.href} aria-current={active(item.href) ? 'page' : undefined}>{item.label}</a>)}
+      <ThemeToggle />
+    </div>
+  </div>
+</nav>

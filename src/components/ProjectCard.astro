@@ -1,0 +1,21 @@
+---
+// Adapted from as-folio's projects/ProjectCard.astro (MIT; see licenses/as-folio-MIT.txt).
+import type { projects } from '../data/projects';
+interface Props { project: (typeof projects)[number] }
+const { project } = Astro.props;
+---
+<article class="project-card card hoverable">
+  <a class="card-image-link" href={project.href} aria-label={`Read ${project.title}`}>
+    <img class="card-img-top" src={project.image} alt={project.imageAlt} width="800" height="450" loading="lazy" />
+  </a>
+  <div class="card-body">
+    <p class="project-meta">{project.meta}</p>
+    <h3 class="card-title"><a href={project.href}>{project.title}</a></h3>
+    <p class="card-text">{project.description}</p>
+    <div class="project-tags">{project.tags.map((tag) => <span>{tag}</span>)}</div>
+    <div class="card-actions">
+      <a href={project.href}>Read project →</a>
+      <a href={`https://github.com/${project.github}`} aria-label={`${project.title} source on GitHub`}>GitHub ↗</a>
+    </div>
+  </div>
+</article>

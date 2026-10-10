@@ -19,11 +19,8 @@
   --wide: 1120px;
   color-scheme: light;
 }
-@media (prefers-color-scheme: dark) {
-  :root {
-    --paper: #0f151b; --panel: #161e26; --ink: #e6ebf0; --ink-2: #9aa8b5; --rule: #2a3540; --grid: #1f2a34;
-    --amber: #f0a050; --amber-soft: rgba(240, 160, 80, .12); --path: #6fd39a; --stop: #ff5a6a; color-scheme: dark;
-  }
+:root[data-theme="dark"] {
+  --amber: #f0a050; --amber-soft: rgba(240, 160, 80, .12); --path: #6fd39a; --stop: #ff5a6a;
 }
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--paper); color: var(--ink); font: 400 1.0625rem/1.65 var(--font-body); padding-inline: 20px; padding-block: 0 64px; }

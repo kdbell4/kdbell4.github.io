@@ -1,43 +1,25 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import '../styles/home.css';
+import ProjectCard from '../components/ProjectCard.astro';
+import { projects } from '../data/projects';
 ---
-<BaseLayout title="kdbell4 · Projects" description="Projects in analog circuits, PCB layout, embedded firmware, CAD and computer vision.">
-<div class="wrap">
-  <header>
-    <span class="label">kdbell4</span>
-    <a href="https://github.com/kdbell4">GitHub</a>
-  </header>
-
-  <section class="intro">
-    <h1>Hi, I'm Kenny Bell</h1>
-    <p>I am a sophomore at UCSD persuing a B.S. in Electrical Engineering. I'm interested in physics, hardware design, and open-source software.</p>
-  </section>
-
-  <section class="projects" aria-label="Projects">
-    <span class="label">Projects</span>
-    <a class="project" href="ppg-vitals-monitor/">
-      <div class="shot"><img src="ppg-vitals-monitor/assets/enclosure-board.webp" alt="The PPG monitor board assembled inside its 3D-printed housing" width="1200" height="900"></div>
-      <div class="body">
-        <span class="label">2026 · in progress</span>
-        <h2>PPG Vitals Monitor</h2>
-        <p>A finger-clip pulse sensor. A photodiode and transimpedance amplifier pick up blood-volume changes through the fingertip, and a Teensy 4.0 turns them into heart rate, with SpO<sub>2</sub> and pulse-shape identification next.</p>
-        <div class="tags"><span>Analog design</span><span>KiCad</span><span>FreeCAD</span><span>C++</span><span>Python</span></div>
-        <span class="more">Read the project →</span>
+<BaseLayout title="Kenny Bell" description="Kenny Bell's engineering portfolio: analog circuits, PCB design, embedded systems, CAD, and computer vision.">
+  <div class="page-container portfolio-page">
+    <header class="post-header">
+      <h1 class="post-title">Kenny Bell</h1>
+      <p class="post-description">Electrical engineering student at UC San Diego</p>
+    </header>
+    <div class="about-intro">
+      <p>Hi, I’m Kenny. I’m a sophomore pursuing a B.S. in Electrical Engineering at UC San Diego. I’m interested in physics, hardware design, and open-source software.</p>
+      <p>My projects bring together circuits, PCB layout, embedded firmware, CAD, and computer vision. I enjoy building a system end to end and documenting what I learn along the way.</p>
+      <div class="social-links">
+        <a href="https://github.com/kdbell4">GitHub ↗</a>
+        <a href="/projects/">All projects →</a>
       </div>
-    </a>
-    <a class="project" href="hazard-detector/">
-      <div class="shot"><img style="object-position: 50% 58%" src="hazard-detector/assets/poster.jpg" alt="Night bike path with the road surface outlined by MobileSAM" width="360" height="640" loading="lazy"></div>
-      <div class="body">
-        <span class="label">Spring 2026 · IEEE team project</span>
-        <h2>Hazard Detector</h2>
-        <p>Real-time hazard detection for e-scooters. YOLOv8 spots potholes, curbs, people and cars, and a MobileSAM road segmentation I built makes sure it only beeps for things actually in the rider's path.</p>
-        <div class="tags"><span>Computer vision</span><span>YOLOv8</span><span>MobileSAM</span><span>OpenCV</span><span>FastAPI</span></div>
-        <span class="more">Read the project →</span>
-      </div>
-    </a>
-  </section>
-
-  <footer>Site source: <a href="https://github.com/kdbell4/kdbell4.github.io">kdbell4/kdbell4.github.io</a></footer>
-</div>
+    </div>
+    <section aria-labelledby="featured-heading">
+      <h2 class="section-title" id="featured-heading">Featured projects</h2>
+      <div class="project-grid">{projects.map((project) => <ProjectCard project={project} />)}</div>
+    </section>
+  </div>
 </BaseLayout>

@@ -2,7 +2,7 @@ import { cpSync, readdirSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 
 // This repository's Pages source is main/(root). Keep generated files there.
-for (const path of ['index.html', '_astro', 'ppg-vitals-monitor', 'hazard-detector', '.nojekyll']) {
+for (const path of ['index.html', '_astro', 'ppg-vitals-monitor', 'hazard-detector', 'projects', '.nojekyll']) {
   rmSync(path, { recursive: true, force: true });
 }
 

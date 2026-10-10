@@ -5,9 +5,9 @@ import BoardTabs from '../../components/BoardTabs.vue';
 ---
 
 <BaseLayout title="PPG Vitals Monitor" description="The PPG Vitals Monitor project page.">
-  <div class="wrap">
+  <div class="wrap case-study">
     <header class="top">
-      <a class="label" href="../">← All projects</a>
+      <a class="label" href="/projects/">← All projects</a>
       <nav aria-label="Sections">
         <a href="#signal">Analog signal chain</a>
         <a href="#pcb">PCB design</a>
@@ -17,7 +17,7 @@ import BoardTabs from '../../components/BoardTabs.vue';
       </nav>
     </header>
 
-    <main>
+    <div class="project-content">
       <div class="hero">
         <h1>PPG Vitals Monitor</h1>
         <p class="lede">
@@ -210,6 +210,6 @@ if band.any():
           </li>
         </ol>
       </section>
-    </main>
+    </div>
   </div>
 </BaseLayout>

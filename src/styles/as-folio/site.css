@@ -1,0 +1,71 @@
+/* Adapted from as-folio's typography, navbar, cards, and footer.
+   Original MIT license: licenses/as-folio-MIT.txt */
+@import './colors.css';
+
+:root {
+  --font-sans: 'Roboto', system-ui, -apple-system, sans-serif;
+  --font-condensed: 'Roboto Condensed', 'Arial Narrow', sans-serif;
+  --font-mono: 'Source Code Pro', 'Roboto Mono', ui-monospace, monospace;
+}
+* { box-sizing: border-box; }
+html { font-family: var(--font-sans); font-size: 16px; line-height: 1.6; scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+body { margin: 0; padding: 0 !important; min-height: 100vh; display: flex; flex-direction: column; background: var(--global-bg-color) !important; color: var(--global-text-color) !important; font: 400 1rem/1.6 var(--font-sans) !important; }
+main#content { flex: 1; padding-top: var(--navbar-height); }
+h1, h2, h3, h4 { font-family: var(--font-sans); font-weight: 700; scroll-margin-top: 72px; }
+a { color: var(--global-theme-color); text-decoration: none; }
+a:hover { color: var(--global-hover-color); }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--global-theme-color); outline-offset: 3px; }
+img, video { max-width: 100%; }
+code, pre { font-family: var(--font-mono); }
+code:not(pre code) { background: var(--global-code-bg-color); border-radius: 3px; padding: .1em .3em; }
+.page-container { width: 100%; max-width: 930px; margin-inline: auto; padding-inline: 1rem; }
+.site-navbar { position: fixed; top: 0; left: 0; right: 0; z-index: 40; height: var(--navbar-height); border-bottom: 1px solid var(--global-divider-color); background: var(--global-bg-color); }
+.navbar-inner { display: flex; align-items: center; justify-content: space-between; height: 100%; gap: 1rem; }
+.brand { color: var(--global-text-color); font-size: 1.125rem; font-weight: 700; white-space: nowrap; }
+.brand:hover { color: var(--global-theme-color); }
+.nav-links { display: flex; align-items: center; gap: .2rem; }
+.nav-links > a { color: var(--global-text-color); font-size: .875rem; padding: .35rem .7rem; }
+.nav-links > a[aria-current='page'] { color: var(--global-theme-color); font-weight: 700; }
+.nav-links > a:hover { color: var(--global-theme-color); }
+.site-footer { margin-top: auto !important; padding: 1rem 0 !important; border: 0 !important; background: var(--global-footer-bg-color); color: var(--global-footer-text-color); font-size: .875rem; }
+.site-footer .page-container { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+.site-footer a { color: var(--global-footer-link-color); }
+.site-footer a:hover { text-decoration: underline; }
+.portfolio-page { padding-top: 2.5rem; padding-bottom: 5rem; }
+.post-header { margin-bottom: 1.5rem; }
+.post-title { color: var(--global-text-color); font-size: 2rem; line-height: 1.2; margin: 0 0 .5rem; }
+.post-description { color: var(--global-text-color-light); margin: 0; }
+.about-intro { max-width: 72ch; font-size: 1.05rem; }
+.about-intro p { margin: 0 0 1rem; }
+.section-title { margin: 2.75rem 0 1.25rem; font-size: 1.5rem; border-bottom: 1px solid var(--global-divider-color); padding-bottom: .4rem; }
+.social-links { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 1.5rem; }
+.project-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.card { border: 1px solid var(--global-divider-color); border-radius: 4px; background: var(--global-card-bg-color); overflow: hidden; display: flex; flex-direction: column; }
+.hoverable { transition: box-shadow .25s ease; }
+.hoverable:hover { box-shadow: 0 5px 11px rgba(0,0,0,.18), 0 4px 15px rgba(0,0,0,.15); }
+.card-image-link { display: block; }
+.card-img-top { display: block; width: 100%; height: 200px; object-fit: cover; }
+.card-body { padding: 1.25rem; flex: 1; display: flex; flex-direction: column; }
+.project-meta { color: var(--global-text-color-light); font-size: .78rem; margin: 0 0 .4rem; }
+.card-title { font-size: 1rem; margin: 0 0 .5rem; }
+.card-title a { color: var(--global-text-color); }
+.card-title a:hover, .card:hover .card-title a { color: var(--global-theme-color); }
+.card-text { color: var(--global-text-color-light); font-size: .875rem; margin: 0 0 1rem; flex: 1; }
+.project-tags { display: flex; gap: .35rem; flex-wrap: wrap; margin-bottom: 1rem; }
+.project-tags span { font: .7rem var(--font-mono); border: 1px solid var(--global-divider-color); border-radius: 3px; padding: .15rem .4rem; }
+.card-actions { display: flex; justify-content: space-between; gap: 1rem; font-size: .8rem; }
+.breadcrumb-nav { margin-bottom: 1.25rem; }
+.breadcrumb-link { font-size: .875rem; font-weight: 500; }
+.case-study { --paper: var(--global-bg-color); --panel: var(--global-card-bg-color); --ink: var(--global-text-color); --ink-2: var(--global-text-color-light); --rule: var(--global-divider-color); --grid: var(--global-divider-color); --font-display: var(--font-sans); --font-body: var(--font-sans); --font-mono: 'Source Code Pro', ui-monospace, monospace; max-width: 930px; padding: 2rem 1rem 5rem; }
+.case-study h1, .case-study h2, .case-study h3 { font-family: var(--font-sans); line-height: 1.2; }
+.case-study h1 { font-size: clamp(2rem, 5vw, 3rem); }
+.case-study h2 { font-size: clamp(1.5rem, 3vw, 2rem); }
+.case-study .top { padding-top: 0; }
+.case-study section { scroll-margin-top: 72px; }
+.case-study a { color: var(--global-theme-color); }
+.case-study .top a { color: var(--global-text-color-light); }
+.case-study .top a:hover { color: var(--global-theme-color); }
+.case-study .sec-head .label { color: var(--global-theme-color); }
+.case-study .hero { padding-top: 3rem; }
+.case-study > footer { margin-top: 4rem; }
+@media (max-width: 640px) { .project-grid { grid-template-columns: 1fr; } .portfolio-page { padding-top: 1.5rem; } }
