@@ -1,1 +1,5 @@
 _originals/
+node_modules/
+dist/
+.astro/
+.aws

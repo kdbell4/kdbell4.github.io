@@ -1,0 +1,244 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import '../../styles/ppg.css';
+import PulseScope from '../../components/PulseScope.vue';
+import BodePlot from '../../components/BodePlot.vue';
+import BoardTabs from '../../components/BoardTabs.vue';
+import EnclosureViewer from '../../components/EnclosureViewer.vue';
+---
+<BaseLayout title="PPG Vitals Monitor" description="A finger-clip pulse sensor built from scratch: analog front end, KiCad PCB, FreeCAD enclosure and Teensy 4.0 firmware." icon="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M2 18h7l3-9 5 16 4-11 2 4h7' fill='none' stroke='%23c42a3c' stroke-width='3' stroke-linejoin='round' stroke-linecap='round'/%3E%3C/svg%3E" image="/ppg-vitals-monitor/assets/enclosure-board.webp">
+<div class="wrap">
+  <header class="top">
+    <a class="label" href="../" style="text-decoration:none">← All projects</a>
+    <nav aria-label="Sections">
+      <a href="#signal">Signal chain</a>
+      <a href="#response">Response</a>
+      <a href="#pcb">PCB</a>
+      <a href="#enclosure">Enclosure</a>
+      <a href="#firmware">Firmware</a>
+      <a href="#roadmap">Roadmap</a>
+    </nav>
+  </header>
+
+  <div class="hero">
+    <div style="display:grid;gap:18px">
+      <h1>PPG Vitals Monitor</h1>
+      <p class="lede">A finger-clip pulse sensor built from the photodiode up. <strong>Light passes through a fingertip, an analog front end pulls the heartbeat out of the photocurrent, and a Teensy 4.0 samples it at 250&nbsp;Hz</strong> for heart rate now, with SpO<sub>2</sub> and pulse-shape identification planned next.</p>
+    </div>
+
+    <PulseScope client:load />
+    <p class="caption" style="margin-top:-18px">Modelled PPG pulse for illustration: systolic peak followed by the dicrotic notch. These shape features are what the planned bio-ID stage will measure.</p>
+
+    <div class="specs">
+      <div><span class="label">Sensor</span><span class="v">BPW34 + TSAL6200</span></div>
+      <div><span class="label">Front end</span><span class="v">MCP6002 ×2</span></div>
+      <div><span class="label">Board</span><span class="v">86 × 43 mm, 2-layer</span></div>
+      <div><span class="label">Printed parts</span><span class="v">4, FreeCAD</span></div>
+    </div>
+
+    <div class="photos hero-photos">
+      <figure><img src="assets/enclosure-board.webp" alt="Assembled green PCB with the Teensy 4.0 and two op-amps seated inside the black 3D-printed housing" width="1200" height="900"><figcaption>The fabricated board, hand-assembled and seated in the printed housing.</figcaption></figure>
+      <figure><img src="assets/enclosure-closed.webp" alt="Closed carbon-textured housing held in hand, with the photodiode visible through a window in the finger channel" width="1200" height="860"><figcaption>The closed housing. The photodiode looks into the finger channel through a window in the floor.</figcaption></figure>
+    </div>
+  </div>
+
+  <section id="why">
+    <div class="two">
+      <div class="sec-head">
+        <span class="label">Overview</span>
+        <h2>One build, five disciplines</h2>
+      </div>
+      <div class="prose">
+        <p>Photoplethysmography is the technique inside every pulse oximeter and fitness-band heart sensor. Blood volume in the fingertip swells with each heartbeat, so the amount of light that makes it through the tissue rises and falls in time with the pulse.</p>
+        <p>I picked it because a single device forces work across optics (LED wavelength, ambient light), analog design (transimpedance amplifier, filtering, gain staging), PCB layout, embedded firmware, and parametric CAD for a 3D-printed housing that holds everything in optical alignment.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="signal">
+    <div class="sec-head">
+      <span class="label">Signal chain</span>
+      <h2>From photons to ADC counts</h2>
+    </div>
+    <p class="prose">Each stage below uses the component values in the KiCad schematic. The pulse is a small AC ripple riding on a large DC level from steady tissue absorption, so the chain converts current to voltage, strips the DC, removes noise, and then amplifies only what is left.</p>
+    <div class="chain">
+      <div class="stage">
+        <span class="n">LED drive</span>
+        <h3>Emitter</h3>
+        <span class="parts">TSAL6200 940 nm IR<br>+ red LED, R_L1 180 Ω</span>
+        <span class="calc">3.3 V supply</span>
+      </div>
+      <div class="stage">
+        <span class="n">U1A</span>
+        <h3>Photodiode + TIA</h3>
+        <span class="parts">BPW34, R1 10 kΩ ∥ C3 22 pF</span>
+        <span class="calc">10 kV/A</span>
+      </div>
+      <div class="stage">
+        <span class="n">R2 · C1</span>
+        <h3>Low-pass</h3>
+        <span class="parts">330 Ω, 10 µF</span>
+        <span class="calc">f<sub>c</sub> = 48 Hz</span>
+      </div>
+      <div class="stage">
+        <span class="n">C2 · R3</span>
+        <h3>High-pass</h3>
+        <span class="parts">100 µF, 5 kΩ</span>
+        <span class="calc">f<sub>c</sub> = 0.32 Hz</span>
+      </div>
+      <div class="stage">
+        <span class="n">U1B</span>
+        <h3>Inverting gain</h3>
+        <span class="parts">R5 100 kΩ / R4 2 kΩ</span>
+        <span class="calc">−50 V/V</span>
+      </div>
+      <div class="stage">
+        <span class="n">U2 · U3</span>
+        <h3>Rail splitter → ADC</h3>
+        <span class="parts">R6/R7 10 kΩ buffer,<br>Teensy 4.0 pin A0</span>
+        <span class="calc">mid-rail ground</span>
+      </div>
+    </div>
+    <p class="caption">The analog section runs from a single 3.3 V supply. U2 buffers a 10 k/10 k divider to make a mid-supply reference, so the AC pulse can swing both ways around it. The schematic also carries ngspice test sources (100 µA DC + 1 µA at 10 Hz, plus 10 µA at 100 Hz as noise) used to simulate the chain before building it.</p>
+  </section>
+
+  <section id="response">
+    <div class="sec-head">
+      <span class="label">Frequency response</span>
+      <h2>Checking the design against the full circuit</h2>
+    </div>
+    <div class="plot">
+      <div class="legend">
+        <span><i style="border-color:var(--pulse)"></i>Full chain, solved with stage loading</span>
+        <span><i style="border-color:var(--ink-2);border-top-style:dashed"></i>Stages treated as independent</span>
+        <span><i style="border-color:var(--ir);border-top-width:8px;opacity:.35"></i>Heart-rate band, 30–210 BPM</span>
+      </div>
+      <BodePlot client:visible />
+    </div>
+    <div class="two">
+      <div class="prose">
+        <p>The filter values were chosen stage by stage with f<sub>c</sub>&nbsp;=&nbsp;1/(2πRC): 0.32&nbsp;Hz to drop the DC level and 48&nbsp;Hz to drop mains and switching noise. Treated that way, the passband gain is 10&nbsp;kV/A × 50 = 500&nbsp;kV/A.</p>
+        <p>Solving the chain as one network tells a slightly different story. The inverting stage's input resistor R4 sits at a virtual ground, so it appears in parallel with R3 and the high-pass sees 1.43&nbsp;kΩ instead of 5&nbsp;kΩ. The C1 node is loaded the same way.</p>
+      </div>
+      <div class="finding">
+        <span class="label">What the analysis showed</span>
+        <dl class="kv">
+          <dt>−3 dB band</dt><dd>0.88 – 61 Hz (designed 0.32 – 48)</dd>
+          <dt>Peak gain</dt><dd>399 kV/A at 7.3 Hz</dd>
+          <dt>At 1 Hz (60 BPM)</dt><dd>301 kV/A, −2.4 dB</dd>
+          <dt>At 0.5 Hz (30 BPM)</dt><dd>197 kV/A, −6.1 dB</dd>
+        </dl>
+        <p style="font-size:.95rem;color:var(--ink-2)">Resting heart rates still pass, but very slow pulses lose amplitude. Raising R4 and R5 together (same −50 gain) or buffering the high-pass output would bring the corner back near 0.3 Hz on the next board revision.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="pcb">
+    <div class="sec-head">
+      <span class="label">PCB · KiCad 10</span>
+      <h2>A mixed-signal board with a quiet input</h2>
+    </div>
+    <div class="two" style="grid-template-columns:minmax(0,1.5fr) minmax(0,1fr)">
+      <BoardTabs client:load />
+      <ul class="notes">
+        <li><b>Signal flows left to right</b><span>Rail splitter and Teensy on the left, then TIA → low-pass → high-pass → gain across the right half, matching the schematic order.</span></li>
+        <li><b>Short TIA input node</b><span>The photodiode current enters a high-impedance node that behaves like an antenna, so the photodiode header sits right beside U1 and its feedback pair R1/C3.</span></li>
+        <li><b>Ground pour, few vias</b><span>A ground zone backs the analog section. 55 track segments and only 2 vias on two layers.</span></li>
+        <li><b>Photodiode on the back side</b><span>D1 is mounted on the underside of the board, so it faces down into the finger channel when the board sits in the housing.</span></li>
+        <li><b>Fabricated and hand-soldered</b><span>Boards made from the exported Gerbers, then assembled by hand: through-hole passives, DIP-8 op-amps and the Teensy on headers.</span></li>
+        <li><span class="drc">DRC: 0 unconnected · 0 errors</span><span>4 cosmetic warnings (silkscreen text height inside the Teensy footprint, local footprint overrides).</span></li>
+      </ul>
+    </div>
+    <div>
+      <p class="file">ppg_circuit.kicad_sch: scroll sideways on small screens</p>
+      <div class="sheet"><img src="assets/schematic.png" alt="Full KiCad schematic: LED drive, photodiode and TIA, low-pass, high-pass, inverting amplifier, rail splitter and Teensy 4.0" width="1168" height="804" loading="lazy"></div>
+    </div>
+  </section>
+
+  <section id="enclosure">
+    <div class="sec-head">
+      <span class="label">Enclosure · FreeCAD</span>
+      <h2>Four printed parts that hold the optics still</h2>
+    </div>
+    <p class="prose">In a transmission-mode sensor, LED and photodiode alignment and ambient-light leakage matter as much as the circuit does. The housing is modular: the main body holds the finger channel and the PCB, separate holders seat the LED and photodiode across the finger, and a screw-fastened cover closes the bottom. The parts are printed in dark, opaque filament to keep room light away from the photodiode.</p>
+    <EnclosureViewer client:visible />
+    <div class="partlist">
+      <div><b><i class="sw" style="background:var(--ink-2)"></i>Main body</b><span>101 × 58 × 40 mm. Finger channel and PCB bay.</span></div>
+      <div><b><i class="sw" style="background:var(--ir)"></i>Enclosure cover</b><span>Base plate with standoffs and corner screw holes.</span></div>
+      <div><b><i class="sw" style="background:var(--pulse)"></i>LED holder</b><span>Seats the 5 mm emitter over the fingertip.</span></div>
+      <div><b><i class="sw" style="background:var(--mask)"></i>Photodiode cover</b><span>Caps the BPW34 opposite the LED.</span></div>
+    </div>
+    <div class="photos">
+      <figure><img src="assets/enclosure-empty.webp" alt="Empty black printed housing showing the PCB bay and the raised optics block with component holes" width="1200" height="870" loading="lazy"><figcaption>Printed main body. The raised block holds the optics across the finger channel.</figcaption></figure>
+      <figure><img src="assets/enclosure-board.webp" alt="PCB seated inside the printed housing" width="1200" height="900" loading="lazy"><figcaption>The board drops into its bay, matching the L-shaped outline.</figcaption></figure>
+      <figure><img src="assets/enclosure-closed.webp" alt="Closed housing with the photodiode visible through the finger channel" width="1200" height="860" loading="lazy"><figcaption>Closed up, with the photodiode showing through the channel window.</figcaption></figure>
+    </div>
+  </section>
+
+  <section id="firmware">
+    <div class="sec-head">
+      <span class="label">Firmware &amp; tools</span>
+      <h2>Sampling on the Teensy, analysis on the laptop</h2>
+    </div>
+    <div class="two">
+      <div style="display:grid;gap:12px;min-width:0">
+        <p class="prose">The firmware keeps a fixed 250&nbsp;Hz sample clock. Subtracting the period instead of resetting the timer stops jitter in <code>loop()</code> from accumulating into drift, which would smear the FFT.</p>
+        <div>
+          <p class="file">ppg_firmware/src/main.cpp · PlatformIO, Arduino framework</p>
+<pre><span class="k">if</span> (sinceLastSample &gt;= SAMPLE_PERIOD_US) {
+  <span class="c">// Subtract rather than reset to 0 so timing</span>
+  <span class="c">// doesn't drift if loop() runs long.</span>
+  <span class="h">sinceLastSample -= SAMPLE_PERIOD_US;</span>
+  <span class="k">int</span> sample = analogRead(PPG_SIGNAL_PIN);
+  Serial.println(sample);
+}</pre>
+        </div>
+      </div>
+      <div style="display:grid;gap:12px;min-width:0">
+        <p class="prose">A Python tool reads the serial stream and draws an oscilloscope-style sweep with a live spectrum underneath. It picks the strongest peak inside 0.5–3.5&nbsp;Hz and reports it as BPM.</p>
+        <div>
+          <p class="file">ppg_firmware/tools/live_plot.py · numpy, matplotlib, pyserial</p>
+<pre>detrended = values - np.mean(values)      <span class="c"># drop the DC bin</span>
+windowed  = detrended * np.hanning(n)     <span class="c"># limit leakage</span>
+mag   = np.abs(np.fft.rfft(windowed))
+freqs = np.fft.rfftfreq(n, d=1 / fs)
+
+band = (freqs &gt;= 0.5) &amp; (freqs &lt;= 3.5)
+<span class="h">peak = freqs[band][np.argmax(mag[band])]</span>
+bpm  = peak * 60</pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="roadmap">
+    <div class="sec-head">
+      <span class="label">Roadmap</span>
+      <h2>Build phases</h2>
+    </div>
+    <ol class="phases">
+      <li><span class="num">Phase 1</span><div><h3>Breadboard front end</h3><p>IR LED, photodiode, TIA and filters on a breadboard. Firmware streaming samples and a live waveform and FFT plotter.</p></div><span class="chip done">Done</span></li>
+      <li><span class="num">Phase 2</span><div><h3>Sensor PCB and enclosure</h3><p>Schematic simulated, board laid out with a clean DRC, fabricated and hand-assembled. Modular housing printed, with screw fastening.</p></div><span class="chip done">Built</span></li>
+      <li><span class="num">Phase 3</span><div><h3>Dual-wavelength SpO<sub>2</sub></h3><p>Multiplex the red and 940 nm LEDs from the MCU and compute oxygen saturation from the red/IR ratio.</p></div><span class="chip next">Next</span></li>
+      <li><span class="num">Phase 4</span><div><h3>Pulse-shape bio-ID</h3><p>Enroll 2–5 people by pulse width, rise time and dicrotic-notch timing, then match the wearer with a distance-based classifier on the MCU.</p></div><span class="chip next">Planned</span></li>
+      <li><span class="num">Phase 5</span><div><h3>Integrated board and display</h3><p>Fold the MCU and an SSD1306 OLED onto one board and finish the housing around it.</p></div><span class="chip next">Planned</span></li>
+    </ol>
+  </section>
+
+  <section id="stack">
+    <div class="sec-head">
+      <span class="label">Tools</span>
+      <h2>Stack</h2>
+    </div>
+    <div class="stack">
+      <span>KiCad 10</span><span>ngspice</span><span>FreeCAD</span><span>PlatformIO</span><span>C++ / Arduino</span><span>Teensy 4.0</span><span>Python · numpy · matplotlib</span><span>Logseq research notes</span>
+    </div>
+    <p class="caption prose">Background reading: J. Allen, “Photoplethysmography and its application in clinical physiological measurement,” <i>Physiological Measurement</i> 28 (2007).</p>
+  </section>
+
+  <footer>
+    <span>PPG Vitals Monitor</span>
+    <a class="mono" href="https://github.com/kdbell4/PPG-Vitals-Monitor">Source on GitHub</a>
+  </footer>
+</div>
+</BaseLayout>
