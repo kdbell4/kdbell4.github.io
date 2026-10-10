@@ -92,7 +92,7 @@ section { padding-block: 72px 0; display: grid; gap: 22px; scroll-margin-top: 16
 @media (max-width: 860px) { .two { grid-template-columns: minmax(0, 1fr); } }
 
 /* signal chain */
-.chain { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); border: 1px solid var(--rule); border-radius: 6px; background: var(--panel); overflow: hidden; }
+.chain { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border: 1px solid var(--rule); border-radius: 6px; background: var(--panel); overflow: hidden; }
 .stage { padding: 18px 16px 20px; display: grid; gap: 8px; align-content: start; position: relative; }
 .stage + .stage { border-left: 1px solid var(--rule); }
 .stage + .stage::before {
@@ -137,6 +137,11 @@ section { padding-block: 72px 0; display: grid; gap: 22px; scroll-margin-top: 16
 .tabs button[aria-selected="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
 .board { background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; padding: 20px; display: grid; place-items: center; min-height: 240px; }
 .board img { max-height: 520px; width: auto; }
+.pcb-notes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; margin: 0; padding: 0; list-style: none; }
+.pcb-notes li { display: grid; gap: 4px; align-content: start; padding-top: 14px; border-top: 1px solid var(--rule); }
+.pcb-notes b { font-weight: 600; }
+.pcb-notes span { color: var(--ink-2); font-size: .95rem; }
+@media (max-width: 720px) { .pcb-notes { grid-template-columns: minmax(0, 1fr); gap: 16px; } }
 .notes { display: grid; gap: 16px; margin: 0; padding: 0; list-style: none; }
 .notes li { display: grid; gap: 4px; padding-bottom: 16px; border-bottom: 1px solid var(--rule); }
 .notes li:last-child { border-bottom: 0; }
@@ -174,6 +179,7 @@ section { padding-block: 72px 0; display: grid; gap: 22px; scroll-margin-top: 16
 }
 
 /* code */
+.code-panel { display: grid; gap: 12px; align-content: start; min-width: 0; }
 pre {
   margin: 0; background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; padding: 16px 18px;
   font: 400 .82rem/1.6 var(--font-mono); overflow-x: auto; color: var(--ink);
@@ -204,3 +210,9 @@ pre .h { background: var(--pulse-soft); color: var(--pulse); }
 footer { margin-top: 80px; padding-top: 20px; border-top: 1px solid var(--rule); color: var(--ink-2); font-size: .88rem; display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
 
 html{color-scheme:light dark} body{margin:0} img{max-width:100%} [hidden]{display:none!important}
+
+/* references */
+.refs { max-width: var(--measure); margin: 0; padding-left: 1.4em; display: grid; gap: 12px; font-size: .95rem; color: var(--ink-2); }
+.refs li { padding-left: 4px; }
+.refs i { color: var(--ink); }
+.refs a { overflow-wrap: anywhere; }
