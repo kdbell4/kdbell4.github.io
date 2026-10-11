@@ -1,140 +1,80 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import '../../styles/hazard.css';
-import HazardRuleTester from '../../components/HazardRuleTester.vue';
 ---
-<BaseLayout title="Hazard Detector" description="Real-time hazard detection for e-scooters with YOLOv8 and MobileSAM. A four-person IEEE Quarterly Project; I built the road-path segmentation." image="/hazard-detector/assets/poster.jpg">
-<div class="wrap case-study">
-  <header class="top">
-    <a class="label" href="/projects/">← All projects</a>
-    <nav aria-label="Sections">
-      <a href="#rule-sec">Alert rule</a>
-      <a href="#path">Path detection</a>
-      <a href="#pipeline">Pipeline</a>
-      <a href="#team">Team</a>
-    </nav>
-  </header>
 
-  <div class="hero">
-    <div class="hero-text">
-      <span class="label">IEEE Quarterly Project · Spring 2026 · team of 4</span>
+<BaseLayout title="Hazard Detector" description="A camera-based scooter hazard detector built with YOLO and MobileSAM. I developed the road segmentation that identifies the rider's path." image="/hazard-detector/assets/poster.jpg">
+  <article class="page-container hazard-page">
+    <a class="back-link" href="/projects/">← All projects</a>
+    <header>
       <h1>Hazard Detector</h1>
-      <p class="lede">A camera on an e-scooter streams video into a computer-vision pipeline that <strong>spots potholes, rocks, curbs, stairs, speed bumps, people and vehicles, and beeps only when one is actually in the rider's path</strong>. I built the part that finds the path: a MobileSAM model that outlines the road surface ahead.</p>
-      <div class="links">
-        <a class="btn" href="https://github.com/kdbell4/hazard-detector">Source on GitHub</a>
-        <a class="btn" href="https://devpost.com/software/hazard-detection-system">Devpost demo</a>
-      </div>
-    </div>
-    <figure class="phone">
-      <video id="demo" autoplay muted loop playsinline preload="metadata" poster="assets/poster.jpg" aria-label="Night ride along a campus bike path with the detected road surface shaded green and detections boxed">
-        <source src="assets/demo.webm" type="video/webm">
-        <source src="assets/demo.mp4" type="video/mp4">
-      </video>
-      <figcaption class="caption">Our test ride, re-run through MobileSAM and the base YOLO model. Green is the road surface the path step finds. The people later in the clip are detected but stay quiet: they are too small and too far up the frame to be a threat.</figcaption>
-    </figure>
-  </div>
+      <p>As more people ride scooters around campus, a pothole or curb can appear with little time to react. For IEEE Quarterly Projects in spring 2026, our four-person team built a camera-based prototype that spots hazards ahead and warns riders when those hazards are in their path.</p>
+      <p class="project-links">
+        <a href="https://github.com/kdbell4/hazard-detector">Source on GitHub</a>
+        <a href="https://devpost.com/software/hazard-detection-system">Project writeup on Devpost</a>
+      </p>
+    </header>
 
-  <div class="specs">
-    <div><span class="label">My role</span><span class="v">Path segmentation</span></div>
-    <div><span class="label">Detection</span><span class="v">YOLOv8n + 5 custom</span></div>
-    <div><span class="label">Segmentation</span><span class="v">MobileSAM</span></div>
-    <div><span class="label">App</span><span class="v">FastAPI dashboard</span></div>
-  </div>
+    <section aria-labelledby="what-it-does">
+      <h2 id="what-it-does">What it does</h2>
+      <p>The system processes video from a camera to find people, vehicles, animals, potholes, rocks, stairs, curbs, and speed bumps. It checks whether each detection is close enough and within the scooter's path before playing an audio alert. A browser dashboard shows the video and detections, and a CSV log records them with timestamps.</p>
+    </section>
 
-  <section id="rule-sec">
-    <div class="sec-head">
-      <span class="label">The alert rule</span>
-      <h2>Three checks before it beeps</h2>
-    </div>
-    <p class="prose">A detector that beeps at every car in frame is useless, because most of them are parked or far away. An object only counts as a hazard when it is <b>big enough to be close</b>, <b>sitting on the road ahead</b>, and <b>low in the frame</b>. Drag the box around this frame from our test ride, or resize it from the corner, to see the rule decide.</p>
-    <HazardRuleTester client:visible />
-  </section>
+    <section aria-labelledby="the-team">
+      <h2 id="the-team">The Team</h2>
+      <p>Early on, we split the project into four components: hazard logic, custom object detection, path detection, and alerts. We then brought the parts together into one app.</p>
+      <ul>
+        <li><strong>Kenny:</strong> Used MobileSAM to identify the road surface so the system can filter out objects beside the rider's path.</li>
+        <li><strong>Toby:</strong> Built the logic that decides when a detected object is a threat and integrated the components into the web app.</li>
+        <li><strong>Ashwin:</strong> Trained custom models for potholes, rocks, stairs, curbs, and speed bumps using public and collected data.</li>
+        <li><strong>Katherine:</strong> Built the audio alerts, a two-second cooldown to limit repeat beeps, and timestamped CSV logging.</li>
+      </ul>
+    </section>
 
-  <section id="path">
-    <div class="sec-head">
-      <span class="label">My part · path detection</span>
-      <h2>Finding the road with three seed points</h2>
-    </div>
-    <div class="two">
-      <div class="prose">
-        <p>Before path detection, the "in path" check was a fixed strip down the middle of the frame. That breaks on curves and whenever the camera tilts, which happens constantly on a scooter.</p>
-        <p>Segment Anything models take prompts: give them a point and they return the mask of the object under it. The pixels just in front of the front wheel are almost always road, so I seed MobileSAM with three points along the bottom edge, at 2/5, 1/2 and 3/5 of the width. Of the masks it returns, I keep the largest one and turn it into a polygon. The rest of the app can then test any point against it with <code>cv2.pointPolygonTest</code>.</p>
-        <p>Segmentation is the slowest model in the pipeline, so it runs on every fifth inference frame and the polygon is reused in between. The road ahead barely changes in a sixth of a second.</p>
-      </div>
-      <div style="min-width:0">
-        <p class="file">webapp/engine.py · _update_path_polygon</p>
-<pre>points = [[2 * w // 5, h],      <span class="c"># left of the wheel</span>
-          [w // 2,     h],      <span class="c"># straight ahead</span>
-          [3 * w // 5, h]]      <span class="c"># right of the wheel</span>
-results = self._sam.predict(frame, conf=0.25,
-                            points=points, verbose=False)
-<span class="k">if</span> results[0].masks <span class="k">and</span> results[0].masks.xy:
-    <span class="h">self._path_polygon = max(results[0].masks.xy,
-                             key=cv2.contourArea)</span></pre>
-      </div>
-    </div>
-    <div class="two">
-      <div class="prose">
-        <h3 style="margin-bottom:10px">How it developed</h3>
-        <p>I prototyped on a still image first, then on recorded ride video, then reduced the output to the single polygon the hazard logic needs before merging it into the team repo.</p>
-      </div>
-      <ol class="timeline">
-        <li><time>Apr 28</time><span>Segmented a single road image with SAM</span></li>
-        <li><time>Apr 29</time><span>Ran it on ride video, prompted by one point</span></li>
-        <li><time>May 4</time><span>Switched to three seed points and kept only the largest mask as a polygon</span></li>
-        <li><time>May 13</time><span>Refactored and merged into the team repo</span></li>
-        <li><time>May 26</time><span>Added SAM 2.1 tiny weights to the main repo to try as a replacement</span></li>
+    <section aria-labelledby="what-i-wrote">
+      <h2 id="what-i-wrote">What I wrote</h2>
+      <p>I chose to work on path detection. In <code>webapp/engine.py</code>, my MobileSAM code segments the road ahead and returns a polygon around the likely route. The hazard logic uses that polygon to ignore detections off to the side.</p>
+      <figure class="path-demo">
+        <video controls playsinline preload="metadata" poster="/hazard-detector/assets/poster.jpg" aria-label="Test ride with the road detected by MobileSAM shaded green">
+          <source src="/hazard-detector/assets/demo.webm" type="video/webm" />
+          <source src="/hazard-detector/assets/demo.mp4" type="video/mp4" />
+          Your browser does not support this video.
+        </video>
+        <figcaption>Path detection on a recorded test ride. Green marks the road found by MobileSAM. This clip shows my component, not the final integrated system.</figcaption>
+      </figure>
+    </section>
+
+    <section aria-labelledby="how-it-works">
+      <h2 id="how-it-works">How it works</h2>
+      <ol>
+        <li>YOLOv8n detects people, vehicles, and animals. Five custom models detect potholes, rocks, stairs, curbs, and speed bumps.</li>
+        <li>My code prompts MobileSAM with three points near the bottom of the frame, where the road is likely to be. It keeps the largest returned mask as a road polygon. Segmentation runs every fifth inference frame, and the polygon is reused between updates.</li>
+        <li>For each detection, the hazard logic checks its size and position against the road polygon to decide whether to warn the rider. The alert system plays a sound, records the detection, and uses a cooldown to avoid constant beeping.</li>
       </ol>
-    </div>
-  </section>
+    </section>
 
-  <section id="pipeline">
-    <div class="sec-head">
-      <span class="label">Pipeline</span>
-      <h2>From camera frame to beep</h2>
-    </div>
-    <div class="flow">
-      <div><span class="n">Capture thread</span><h3>Camera</h3><p>Webcam or video file, one-frame buffer so inference always sees the newest frame.</p><span class="rate">full frame rate</span></div>
-      <div><span class="n">Ultralytics YOLO</span><h3>Detection</h3><p>YOLOv8n filtered to people, vehicles and animals, plus five custom-trained hazard models.</p><span class="rate">base every frame, custom every 3rd</span></div>
-      <div class="mine"><span class="n">MobileSAM · my part</span><h3>Road path</h3><p>Largest mask from three bottom-edge seed points, kept as a polygon.</p><span class="rate">every 5th frame</span></div>
-      <div><span class="n">Hazard logic</span><h3>Alert rule</h3><p>Close enough, in the path, and low in frame. Per-label cooldown so one pothole beeps once.</p><span class="rate">per detection</span></div>
-      <div><span class="n">FastAPI</span><h3>Alert + dashboard</h3><p>Audio alert, CSV log, and a browser dashboard with the live feed and model toggles.</p><span class="rate">MJPEG stream</span></div>
-    </div>
-    <p class="caption prose">Capture and inference run on separate threads, so the video stays smooth while the boxes update as fast as the hardware allows. The engine picks Apple MPS, CUDA or CPU automatically.</p>
-  </section>
+    <section aria-labelledby="challenges">
+      <h2 id="challenges">Challenges and lessons</h2>
+      <p>Road hazard datasets were often small or inconsistently labeled, and training on Apple Silicon was slow. Combining several models also caused misclassifications. The team adjusted confidence thresholds and moved training to Google Colab for GPU access.</p>
+      <p>Integrating YOLO, OpenCV, and MobileSAM into a single webcam prototype taught us that detection accuracy is only part of the problem: alerts also need to be selective enough for a rider to use.</p>
+    </section>
 
-  <section id="team">
-    <div class="sec-head">
-      <span class="label">Team</span>
-      <h2>Who built what</h2>
-    </div>
-    <div class="team">
-      <div class="me"><span class="role">Me · path detection</span><h3>Kenny</h3><p>MobileSAM road segmentation, so alerts only fire for objects in the scooter's path. Also set up the repo and the first YOLO + OpenCV demo.</p></div>
-      <div><span class="role">Hazard logic + integration</span><h3>Toby</h3><p>The rule that decides when an object is a threat, and the web app that combines everyone's work.</p></div>
-      <div><span class="role">Custom models</span><h3>Ashwin</h3><p>Trained the pothole, rock, stair, curb and speed-bump models from Roboflow datasets and collected data.</p></div>
-      <div><span class="role">Alerts</span><h3>Katherine</h3><p>Audio playback, the cooldown that stops constant beeping, and timestamped CSV logging.</p></div>
-    </div>
-  </section>
+    <section aria-labelledby="whats-next">
+      <h2 id="whats-next">What's next</h2>
+      <p>The current version is a software prototype. A future version could pair a compact camera with a small computer mounted on the scooter, with more work on speed, mounting, and everyday usability.</p>
+    </section>
 
-  <section>
-    <div class="sec-head">
-      <span class="label">Tools</span>
-      <h2>Stack</h2>
-    </div>
-    <div class="stack"><span>Python</span><span>Ultralytics YOLOv8</span><span>MobileSAM</span><span>OpenCV</span><span>PyTorch (MPS / CUDA)</span><span>FastAPI</span><span>pygame</span><span>Roboflow</span></div>
-  </section>
-
-  <footer>
-    <span>Hazard Detector</span>
-    <a class="mono" href="https://github.com/kdbell4/hazard-detector">kdbell4/hazard-detector</a>
-  </footer>
-</div>
-<script>
-  const video = document.getElementById('demo');
-  if (video && matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    video.removeAttribute('autoplay');
-    video.pause();
-    video.controls = true;
-  }
-</script>
+    <section aria-labelledby="demo">
+      <h2 id="demo">Demo</h2>
+      <iframe
+        class="demo-video"
+        src="https://www.youtube.com/embed/NZj-NPMG5TE"
+        title="Hazard Detector demo"
+        loading="lazy"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        referrerpolicy="strict-origin-when-cross-origin"
+        allowfullscreen
+      ></iframe>
+    </section>
+  </article>
 </BaseLayout>
