@@ -1,7 +1,9 @@
 # kdbell4.github.io
 Access the website here: [kdbell4.github.io](https://kdbell4.github.io)
 
-Kenny Bell's engineering portfolio, built with Astro and an adapted [as-folio](https://github.com/dadangnh/as-folio) theme. The theme's color system, typography, navigation, project cards, and light/dark toggle are used with original project content. The adapted theme code is covered by the [as-folio MIT license](licenses/as-folio-MIT.txt).
+My engineering portfolio, built with Astro and Vue
+
+Uses the [as-folio](https://github.com/dadangnh/as-folio) Astro theme as a template. The theme's color system, typography, navigation, project cards, and light/dark toggle are used with original project content. The adapted theme code is covered by the [as-folio MIT license](licenses/as-folio-MIT.txt).
 
 ## Develop
 
@@ -22,7 +24,5 @@ Commit the source files and `pnpm-lock.yaml`; `dist/` is ignored by Git. Generat
 
 - `/`: about and featured projects
 - `/projects/`: project index
-- `/ppg-vitals-monitor/`: PPG Vitals Monitor case study
-- `/hazard-detector/`: Hazard Detector case study
-
-The two case studies retain their Vue interactions and media under `public/`.
+- `/ppg-vitals-monitor/`: PPG Vitals Monitor project
+- `/hazard-detector/`: Hazard Detector project
