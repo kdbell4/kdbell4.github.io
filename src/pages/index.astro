@@ -1,26 +1,61 @@
 ---
-import BaseLayout from '../layouts/BaseLayout.astro';
-import ProjectCard from '../components/ProjectCard.astro';
-import { projects } from '../data/projects';
+import BaseLayout from "../layouts/BaseLayout.astro";
+import ProjectCard from "../components/ProjectCard.astro";
+import { projects } from "../data/projects";
 ---
-<BaseLayout title="Kenny Bell" description="Kenny Bell's engineering portfolio: analog circuits, PCB design, embedded systems, CAD, and computer vision.">
-  <div class="page-container portfolio-page">
-    <header class="post-header">
-      <h1 class="post-title">Kenny Bell</h1>
-      <p class="post-description">Electrical engineering student at UC San Diego</p>
-    </header>
-    <div class="about-intro">
-      <p>Hi, I’m Kenny. I’m a sophomore pursuing a B.S. in Electrical Engineering at UC San Diego. I’m interested in physics, hardware design, and open-source software.</p>
-      <p>My projects bring together circuits, PCB layout, embedded firmware, CAD, and computer vision. I enjoy building a system end to end and documenting what I learn along the way.</p>
-      <div class="social-links">
-        <a href="https://github.com/kdbell4" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
-        <a href="https://www.linkedin.com/in/kennethdbell4/" target="_blank" rel="noopener noreferrer">LinkedIn ↗</a>
-        <a href="/projects/">All projects →</a>
-      </div>
+
+<BaseLayout
+    title="Kenny Bell"
+    description="Kenny Bell's engineering portfolio: analog circuits, PCB design, embedded systems, CAD, and computer vision."
+>
+    <div class="page-container portfolio-page">
+        <header class="post-header">
+            <h1 class="post-title">Kenny Bell</h1>
+            <p class="post-description">
+                Electrical engineering student at UC San Diego
+            </p>
+        </header>
+        <div class="about-intro">
+            <p>
+                Hi, I’m Kenny. I’m a sophomore pursuing a B.S. in Electrical
+                Engineering at UC San Diego. I’m interested in physics, hardware
+                design, and open-source software.
+            </p>
+            <p>
+                My projects bring together circuits, PCB layout, embedded
+                firmware, CAD, and computer vision. I enjoy building a system
+                end to end and documenting what I learn along the way.
+            </p>
+            <div class="social-links">
+                <a href="/resume.pdf" target="_blank" rel="noopener noreferrer">
+                    Resume ↗
+                </a>
+                <a
+                    href="https://github.com/kdbell4"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                >
+                    GitHub ↗
+                </a>
+                <a
+                    href="https://www.linkedin.com/in/kennethdbell4/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                >
+                    LinkedIn ↗
+                </a>
+                <a href="/projects/">All projects →</a>
+            </div>
+        </div>
+        <section aria-labelledby="featured-heading">
+            <h2 class="section-title" id="featured-heading">
+                Featured projects
+            </h2>
+            <div class="project-grid">
+                {projects.map((project) => (
+                    <ProjectCard project={project} />
+                ))}
+            </div>
+        </section>
     </div>
-    <section aria-labelledby="featured-heading">
-      <h2 class="section-title" id="featured-heading">Featured projects</h2>
-      <div class="project-grid">{projects.map((project) => <ProjectCard project={project} />)}</div>
-    </section>
-  </div>
 </BaseLayout>
